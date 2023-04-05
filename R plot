@@ -1,0 +1,89 @@
+
+# Figure 4A
+# read in the csv file 'derby selected.csv' and assign it to the variable 'add'
+add <- read.csv("derby selected.csv") 
+
+# load the 'ggpubr' and 'reshape2' libraries
+library(ggpubr) 
+library(reshape2) 
+
+# melt the 'add' dataframe using column names "SubClass" and "model" as id variables
+# then plot the resulting melted dataframe as an errorbar plot using the 'ggerrorplot' function
+# with x-axis as 'variable', y-axis as 'value', and color coded by 'model' variable
+# add points to the plot, set the size of the points to 4, and use the 'jco' color palette
+add %>% 
+  melt(., id.vars = c("SubClass", "model")) %>%   
+    ggerrorplot(.,             
+                x = "variable",             
+                y = "value",                              
+                color = "model",             
+                add = "point",             
+                add.params = list(size = 4),             
+                palette = "jco")  
+
+# save the resulting plot as a pdf file named 'derby selected.pdf' with width and height of 5 inches
+ggsave("derby selected.pdf", width = 5,height = 5)
+
+
+
+# Figure 7A, 7B, 7C
+# Load "rela.csv" and exclude the check on variable names
+rela <- read.csv("rela.csv", check.names = F) 
+
+# Load the "ggpubr" library for data visualization
+library(ggpubr) 
+
+# Rename column names and assign it to a variable
+colnames(rela) -> names 
+
+# Create a scatter plot and add a smooth line
+ggscatter(rela,           
+          x = names[2],           
+          y = names[6]) +   
+          geom_smooth()    
+
+# Select and group data by Cefazolin and Citrulline and calculate their mean values
+data = rela %>%     
+       select(Cefazolin,Citrulline) %>%     
+               group_by(Cefazolin) %>%     
+               summarise(mean(Citrulline))  
+
+# Rename column index 2 to "Citrulline"
+colnames(data)[2] = c("Citrulline")   
+
+# Create an error plot
+ggerrorplot(rela, x = "Cefazolin", y = "Citrulline") + 
+
+# Add a smooth line to the error plot
+                geom_smooth(data,              
+                mapping = aes(x = Cefazolin,                             
+                              y = Citrulline),     
+                method = lm, se = T, colour = "#0073C2FF")  
+
+# Install and load the "ggpmisc" library for data manipulation
+install.packages("ggpmisc") 
+library(ggpmisc)    
+
+# Create a scatter plot for Cefazolin vs Citrulline and add a title
+ggplot(rela, aes(Cefazolin, Citrulline)) +   
+        geom_point() + 
+        ggtitle("Cefazolin vs Citrulline Scatter Plot")
+
+# Create a loop to generate scatter plots, smooth lines and save plots for all combinations of variables
+for (i in 2:5) {   
+        print(i)   
+        for (j in 6:11) {     
+                print(j)     
+                ggscatter(rela,             
+                x = names[i],             
+                y = names[j]) +     
+                geom_smooth(method = lm, se = T, colour = "#0073C2FF") +     
+                stat_poly_eq(aes(label = paste(..eq.label.., ..adj.rr.label.., sep = '~~~~')),                   
+                formula = y ~ x, parse = T) +     
+                theme_pubr()   
+                
+                # Save scatter plots with smooth lines as pdf files
+                ggsave(paste0(names[i]," vs ",names[j]," smooth.pdf"), width = 5, height = 4)   
+        } 
+}
+
